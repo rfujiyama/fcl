@@ -10,6 +10,8 @@
    The fcl_list_links struct, together with FCL_LIST_DL_XXX macros implement
    a doubly-linked list with a tail pointer in the head for O(1) tail access.
 
+   WARNING: this library is NOT thread safe
+
    Example:
    #include <stdlib.h>
    #include "fcl_list.h"
