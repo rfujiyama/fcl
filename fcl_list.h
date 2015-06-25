@@ -11,38 +11,6 @@
    a doubly-linked list with a tail pointer in the head for O(1) tail access.
 
    WARNING: this library is NOT thread safe
-
-   Example:
-   #include <stdlib.h>
-   #include "fcl_list.h"
-   struct my_node {
-     struct fcl_list_links links;
-     int id;
-     int priority;
-   };
-   // generate the functions for my_node
-   FCL_LIST_DL_DEFINE(node, struct my_node, links)
-   void main() {
-     // allocate and initialize the list head
-     struct fcl_list_links *head = malloc(sizeof(*head));
-     fcl_list_dl_init(head);
-     // allocate and add 10 nodes to the list
-     struct my_node *nodes = malloc(sizeof(*nodes) * 10);
-     int i;
-     for (i=0; i < 10; i++)
-       node_list_insert_tail(head, &nodes[i]);
-     // iterate over the list, printing and then removing the nodes
-     struct fcl_list_links *iter, *tmp;
-     struct my_node *entry;
-     FCL_LIST_DL_EACH(head, iter, tmp) {
-       entry = node_list_get_entry(iter);
-       print_node(entry);
-       node_list_remove(entry);
-     }
-     free(head);
-     free(nodes);
-     return 0;
-   }
 */
 
 #ifndef _FCL_LIST_H_
@@ -68,13 +36,65 @@ static inline void fcl_list_dl_init(struct fcl_list_links *head) {
   head->prev = head;
 }
 
+
+// TODO: check insert and removal of a single element
+// TODO: single element next field initialized
+// name = list prefix, eg events
+// type = container type, eg event
+// field_type = the type in container containing the list link(s)
+// field = name of the field_type struct in the container
+#define FCL_LIST_FIFO_DEFINE(name, type, field_type, field) \
+struct name##_list_head {\
+  field_type *first; \
+  field_type *last; \
+};  \
+inline void name##_list_head_init(struct name##_list_head *head) {\
+  assert(head); \
+  head->first = NULL; \
+  head->last = NULL;  \
+} \
+type *name##_list_get_entry(field_type *e) {\
+  assert(e);  \
+  return CONTAINER_OF(e, type, field);  \
+} \
+inline int name##_list_is_empty(struct name##_list_head *head) {\
+  assert(head); \
+  return head->first ? 0 : 1; \
+} \
+void name##_list_insert(struct name##_list_head *head, type *e) {\
+  assert(head); \
+  assert(e);  \
+  if (! name##_list_is_empty(head)) { \
+    head->last->next = &e->field;  \
+  } else {  \
+    head->first = &e->field;  \
+  } \
+  head->last = &e->field; \
+} \
+type *name##_list_get(struct name##_list_head *head) {\
+  assert(head); \
+  if (name##_list_is_empty(head)) \
+    return NULL;  \
+  return name##_list_get_entry(head->first); \
+} \
+type *name##_list_remove(struct name##_list_head *head) {\
+  assert(head); \
+  type *tmp = name##_list_get(head);  \
+  if (tmp)  \
+    head->first = head->first->next; \
+  return tmp; \
+}
+
+
 // NOTE: it is safe to remove elements while iterating with this macro
 // l = ptr to initialized fcl_list_links struct
 // i, tmp = fcl_list_links ptrs (may be NULL)
 #define FCL_LIST_DL_EACH(l, i, tmp)                              \
   for (i = (l)->next; (i != (l)) && (tmp = i->next); i = (tmp)) 
 
-
+// name = list prefix, eg events
+// type = container type, eg event
+// field = name of the fcl_list_links struct in the container
 #define FCL_LIST_DL_DEFINE(name, type, field) \
 void name##_list_insert_head(struct fcl_list_links *head, type *e) {\
   assert(head); \
