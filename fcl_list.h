@@ -14,8 +14,13 @@
    a singly-linked list where items are inserted at the tail and removed from
    the head.  Insert (push), remove (pop), and get (peek) operations are O(1).
 
+   The fcl_list_link struct, together with FCL_LIST_LIFO_XXX macros implement
+   a singly-linked list where items are inserted at the head and removed from
+   the head.  Insert (push), remove (pop), and get (peek) operations are O(1).
+
    The fcl_list_links struct, together with FCL_LIST_DL_XXX macros implement
-   a doubly-linked list with a tail pointer in the head for O(1) tail access.
+   a doubly-linked list with a tail pointer in the head for O(1) head/tail
+   insert/remove/access.
 
    Advanced usage:
    Object reuse:
@@ -56,8 +61,8 @@ struct fcl_list_links {
 
 // name = list prefix, eg events
 // type = container type, eg event
-// field_type = the type in container containing the list link(s)
-// field = name of the field_type struct in the container
+// field_type = the list link(s) type, eg struct fcl_list_link
+// field = name of the field_type struct in the container, eg link
 #define FCL_LIST_FIFO_DEFINE(name, type, field_type, field) \
 struct name##_list_head {\
   field_type *first; \
@@ -85,6 +90,57 @@ void name##_list_insert(struct name##_list_head *head, type *e) {\
   } \
   head->last = &e->field; \
   e->field.next = NULL; \
+} \
+type *name##_list_get(struct name##_list_head *head) {\
+  assert(head); \
+  if (!name##_list_is_empty(head)) \
+    return name##_list_get_entry(head->first); \
+  return NULL;  \
+} \
+type *name##_list_remove(struct name##_list_head *head) {\
+  assert(head); \
+  type *tmp;  \
+  if (!name##_list_is_empty(head)) {  \
+    tmp = name##_list_get_entry(head->first); \
+    head->first = head->first->next;  \
+    return tmp; \
+  } \
+  return NULL;  \
+}
+
+
+#define FCL_LIST_LIFO_EACH(h, i, tmp)                              \
+  for (i = (h)->first; (i) && (tmp = i->next, 1); i = (tmp))
+
+// name = list prefix, eg events
+// type = container type, eg event
+// field_type = the list link(s) type, eg struct fcl_list_link
+// field = name of the field_type struct in the container, eg link
+#define FCL_LIST_LIFO_DEFINE(name, type, field_type, field) \
+struct name##_list_head {\
+  field_type *first; \
+};  \
+void name##_list_head_init(struct name##_list_head *head) {\
+  assert(head); \
+  head->first = NULL; \
+} \
+type *name##_list_get_entry(field_type *e) {\
+  assert(e);  \
+  return CONTAINER_OF(e, type, field);  \
+} \
+int name##_list_is_empty(struct name##_list_head *head) {\
+  assert(head); \
+  return head->first ? 0 : 1; \
+} \
+void name##_list_insert(struct name##_list_head *head, type *e) {\
+  assert(head); \
+  assert(e);  \
+  if (! name##_list_is_empty(head)) { \
+    e->field.next = head->first;  \
+  } else {  \
+    e->field.next = NULL;  \
+  } \
+  head->first = &e->field; \
 } \
 type *name##_list_get(struct name##_list_head *head) {\
   assert(head); \
