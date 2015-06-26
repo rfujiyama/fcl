@@ -6,11 +6,27 @@
 
 /* A simple, header-only linked list library.
    Typesafety is provided by generating type-specific functions via a macro.
+   Allocation and deallocation are not managed by this library and are the
+   responsibility of the caller.
+   This library is NOT thread safe.
+
+   The fcl_list_link struct, together with FCL_LIST_FIFO_XXX macros implement
+   a singly-linked list where items are inserted at the tail and removed from
+   the head.  Insert (push), remove (pop), and get (peek) operations are O(1).
 
    The fcl_list_links struct, together with FCL_LIST_DL_XXX macros implement
    a doubly-linked list with a tail pointer in the head for O(1) tail access.
 
-   WARNING: this library is NOT thread safe
+   Advanced usage:
+   Object reuse:
+   A struct with embedded fcl_list_links may have both
+   FCL_LIST_DL_XXX and FCL_LIST_FIFO_XXX functions generated such that objects
+   in use are doubly linked, while unused objects are placed on a singly linked
+   free list.
+   Multiple links:
+   The FCL_LIST_XXX_DEFINE macros may be used multiple times for the same
+   struct as long as the name is unique.  A struct with multiple embedded link
+   structs can thus be on multiple lists at the same time.
 */
 
 #ifndef _FCL_LIST_H_
