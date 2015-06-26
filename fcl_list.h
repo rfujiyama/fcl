@@ -52,7 +52,7 @@ inline void name##_list_head_init(struct name##_list_head *head) {\
   assert(head); \
   head->first = NULL; \
 } \
-type *name##_list_get_entry(field_type *e) {\
+inline type *name##_list_get_entry(field_type *e) {\
   assert(e);  \
   return CONTAINER_OF(e, type, field);  \
 } \
@@ -79,10 +79,13 @@ type *name##_list_get(struct name##_list_head *head) {\
 } \
 type *name##_list_remove(struct name##_list_head *head) {\
   assert(head); \
-  type *tmp = name##_list_get(head);  \
-  if (tmp)  \
-    head->first = head->first->next; \
-  return tmp; \
+  type *tmp;  \
+  if (head->first) {  \
+    tmp = name##_list_get_entry(head->first); \
+    head->first = head->first->next;  \
+    return tmp; \
+  } \
+  return NULL;  \
 }
 
 
