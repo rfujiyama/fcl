@@ -51,7 +51,6 @@ struct name##_list_head {\
 inline void name##_list_head_init(struct name##_list_head *head) {\
   assert(head); \
   head->first = NULL; \
-  head->last = NULL;  \
 } \
 type *name##_list_get_entry(field_type *e) {\
   assert(e);  \
@@ -70,6 +69,7 @@ void name##_list_insert(struct name##_list_head *head, type *e) {\
     head->first = &e->field;  \
   } \
   head->last = &e->field; \
+  e->field.next = NULL; \
 } \
 type *name##_list_get(struct name##_list_head *head) {\
   assert(head); \
