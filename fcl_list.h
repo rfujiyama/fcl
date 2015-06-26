@@ -35,6 +35,9 @@ struct fcl_list_links {
 };
 
 
+#define FCL_LIST_FIFO_EACH(h, i, tmp)                              \
+  for (i = (h)->first; (i) && (tmp = i->next, 1); i = (tmp))
+
 // name = list prefix, eg events
 // type = container type, eg event
 // field_type = the type in container containing the list link(s)
