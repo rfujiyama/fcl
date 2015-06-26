@@ -44,15 +44,15 @@ struct name##_list_head {\
   field_type *first; \
   field_type *last; \
 };  \
-inline void name##_list_head_init(struct name##_list_head *head) {\
+void name##_list_head_init(struct name##_list_head *head) {\
   assert(head); \
   head->first = NULL; \
 } \
-inline type *name##_list_get_entry(field_type *e) {\
+type *name##_list_get_entry(field_type *e) {\
   assert(e);  \
   return CONTAINER_OF(e, type, field);  \
 } \
-inline int name##_list_is_empty(struct name##_list_head *head) {\
+int name##_list_is_empty(struct name##_list_head *head) {\
   assert(head); \
   return head->first ? 0 : 1; \
 } \
