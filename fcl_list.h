@@ -24,21 +24,17 @@
   ((type*)((char*)(ptr) - offsetof(type, field)))
 #endif
 
+
+struct fcl_list_link {
+  struct fcl_list_link *next;
+};
+
 struct fcl_list_links {
   struct fcl_list_links *next;
   struct fcl_list_links *prev;
 };
 
 
-static inline void fcl_list_dl_init(struct fcl_list_links *head) {
-  assert(head);
-  head->next = head;
-  head->prev = head;
-}
-
-
-// TODO: check insert and removal of a single element
-// TODO: single element next field initialized
 // name = list prefix, eg events
 // type = container type, eg event
 // field_type = the type in container containing the list link(s)
@@ -73,14 +69,14 @@ void name##_list_insert(struct name##_list_head *head, type *e) {\
 } \
 type *name##_list_get(struct name##_list_head *head) {\
   assert(head); \
-  if (name##_list_is_empty(head)) \
-    return NULL;  \
-  return name##_list_get_entry(head->first); \
+  if (!name##_list_is_empty(head)) \
+    return name##_list_get_entry(head->first); \
+  return NULL;  \
 } \
 type *name##_list_remove(struct name##_list_head *head) {\
   assert(head); \
   type *tmp;  \
-  if (head->first) {  \
+  if (!name##_list_is_empty(head)) {  \
     tmp = name##_list_get_entry(head->first); \
     head->first = head->first->next;  \
     return tmp; \
@@ -88,6 +84,12 @@ type *name##_list_remove(struct name##_list_head *head) {\
   return NULL;  \
 }
 
+
+static inline void fcl_list_dl_init(struct fcl_list_links *head) {
+  assert(head);
+  head->next = head;
+  head->prev = head;
+}
 
 // NOTE: it is safe to remove elements while iterating with this macro
 // l = ptr to initialized fcl_list_links struct
