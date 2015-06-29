@@ -4,6 +4,22 @@
   Licensed under the terms of the New BSD license.
 */
 
+/* A simple, header-only struct allocator library.
+   Typesafety is provided by generating type-specific functions via a macro.
+   Allocation and deallocation are managed by this library.
+   This library is NOT thread safe.
+
+   The recycle policy controls the order in which structs allocated or returned
+   to the allocator are available for use.  The out of memory (oom) policy
+   controls whether or not more memory is allocated when there are no structs
+   available for use, and how much memory is allocated if an allocation occurs.
+   Allocators may or may not support every recycle and oom policy.
+
+   FCL_ALLOCATOR_LL implements an allocator for structs with an embedded
+   fcl linked list (either singly or doubly linked).  It supports the FIFO and
+   LIFO recycle policies, and the ERROR, DOUBLE, and INCREMENTAL oom policies.
+*/
+
 #ifndef _FCL_ALLOCATOR_H_
 #define _FCL_ALLOCATOR_H_
 
@@ -26,8 +42,15 @@ typedef enum fcl_allocator_oom_policy {
   FCL_ALLOCATOR_OOM_POLICY_INCREMENTAL
 } fcl_allocator_oom_policy;
 
-
-#define FCL_ALLOCATOR_LL_DEFINE(name, type, field_type, field, recycle_policy, oom_policy) \
+// name = allocator prefix, eg node
+// type = container type, eg struct my_node
+// field_type = the list link(s) type, eg struct fcl_list_links
+// field = the name of the field_type struct in the container, eg links
+// recycle_policy must be either FIFO or LIFO
+// example usage:
+// FCL_ALLOCATOR_LL_DEFINE(node, struct my_node, struct fcl_list_links, links,
+//                         FIFO)
+#define FCL_ALLOCATOR_LL_DEFINE(name, type, field_type, field, recycle_policy) \
 FCL_LIST_##recycle_policy##_DEFINE(name##_free, type, field_type, field) \
 struct name##_allocator { \
   struct name##_free_list_head free_list; \
@@ -38,7 +61,7 @@ struct name##_allocator { \
   type** allocations; \
   size_t num_allocations; \
 };  \
-int name##_allocator_init(struct name##_allocator *a, size_t n, \
+int name##_allocator_init(struct name##_allocator *a, size_t initial_size, \
                           fcl_allocator_oom_policy oom_policy, size_t inc) {  \
   assert(a);  \
   type *new_structs;  \
@@ -46,18 +69,18 @@ int name##_allocator_init(struct name##_allocator *a, size_t n, \
   a->allocations = calloc(FCL_ALLOCATOR_LL_DEFAULT_ALLOCATIONS, sizeof(type*));\
   if (!a->allocations)  \
     return -1;  \
-  new_structs = malloc(sizeof(*new_structs) * n); \
+  new_structs = malloc(sizeof(*new_structs) * initial_size); \
   if (!new_structs) \
     return -1;  \
   a->allocations[0] = new_structs;  \
   name##_free_list_head_init(&a->free_list); \
-  a->free_count = n;  \
-  a->total_count = n; \
+  a->free_count = initial_size;  \
+  a->total_count = initial_size; \
   a->oom_policy = oom_policy; \
   a->num_allocations = FCL_ALLOCATOR_LL_DEFAULT_ALLOCATIONS;  \
   switch(a->oom_policy) { \
     case FCL_ALLOCATOR_OOM_POLICY_DOUBLE:  \
-      a->increment = n; \
+      a->increment = initial_size; \
       break;  \
     case FCL_ALLOCATOR_OOM_POLICY_INCREMENTAL: \
       a->increment = inc; \
@@ -65,7 +88,7 @@ int name##_allocator_init(struct name##_allocator *a, size_t n, \
     default:  \
       a->increment = 0; \
   } \
-  for (i=0; i < n; i++) \
+  for (i=0; i < initial_size; i++) \
     name##_free_list_insert(&a->free_list, &new_structs[i]); \
   return 1; \
 } \
@@ -108,7 +131,7 @@ int _##name##_allocator_allocate(struct name##_allocator *a) { \
     return -1; \
   } \
 } \
-type *name##_allocator_get(struct name##_allocator *a) {  \
+type *name##_allocator_borrow(struct name##_allocator *a) {  \
   assert(a);  \
   type *new_struct; \
   if (a->free_count == 0) { \
@@ -129,7 +152,7 @@ type *name##_allocator_get(struct name##_allocator *a) {  \
     a->free_count--;  \
   return new_struct;  \
 } \
-void name##_allocator_put(struct name##_allocator *a, type *e) {  \
+void name##_allocator_return(struct name##_allocator *a, type *e) {  \
   assert(a);  \
   assert(e);  \
   name##_free_list_insert(&a->free_list, e);  \
