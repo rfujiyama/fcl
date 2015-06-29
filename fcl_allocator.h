@@ -135,9 +135,11 @@ int _##name##_allocator_allocate(struct name##_allocator *a) { \
   if (new_allocations) {  \
     a->num_allocations *= 2;  \
     a->allocations = new_allocations; \
-    a->allocations[i+1] = new_structs;  \
     a->total_count += a->increment; \
     a->free_count += a->increment;  \
+    a->allocations[i+1] = new_structs;  \
+    for (i = i+2; i < a->num_allocations; i++) \
+      a->allocations[i] = NULL; \
     return 1; \
   } else {  \
     free(new_structs);  \
