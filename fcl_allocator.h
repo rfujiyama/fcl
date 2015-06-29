@@ -67,10 +67,10 @@ struct name##_allocator { \
   struct name##_free_list_head free_list; \
   size_t free_count; \
   size_t total_count; \
-  fcl_allocator_oom_policy oom_policy;  \
   size_t increment; \
   type** allocations; \
   size_t num_allocations; \
+  fcl_allocator_oom_policy oom_policy;  \
 };  \
 int name##_allocator_init(struct name##_allocator *a, size_t initial_size, \
                           fcl_allocator_oom_policy oom_policy, size_t inc) {  \
