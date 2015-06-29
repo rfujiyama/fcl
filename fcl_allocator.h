@@ -8,6 +8,7 @@
    Typesafety is provided by generating type-specific functions via a macro.
    Allocation and deallocation are managed by this library.
    This library is NOT thread safe.
+   Requires C11 support due to aligned_alloc.
 
    The recycle policy controls the order in which structs allocated or returned
    to the allocator are available for use.  The out of memory (oom) policy
@@ -24,8 +25,18 @@
 #define _FCL_ALLOCATOR_H_
 
 #include <assert.h>     // assert
-#include <stdlib.h>     // malloc
+#include <stdlib.h>     // aligned_alloc
 #include "fcl_list.h"
+
+#ifndef LEVEL1_DCACHE_LINESIZE
+/*! Used to align and place objects to avoid false sharing
+
+  On modern Intel x86 CPUs, this is typically 64 bytes
+  On Linux it can be defined while compiling with
+  \verbatim -DLEVEL1_DCACHE_LINESIZE=`getconf LEVEL1_DCACHE_LINESIZE` \endverbatim
+*/
+#define LEVEL1_DCACHE_LINESIZE 64
+#endif
 
 #define FCL_ALLOCATOR_LL_DEFAULT_ALLOCATIONS 8
 
@@ -69,7 +80,8 @@ int name##_allocator_init(struct name##_allocator *a, size_t initial_size, \
   a->allocations = calloc(FCL_ALLOCATOR_LL_DEFAULT_ALLOCATIONS, sizeof(type*));\
   if (!a->allocations)  \
     return -1;  \
-  new_structs = malloc(sizeof(*new_structs) * initial_size); \
+  new_structs = aligned_alloc(LEVEL1_DCACHE_LINESIZE, \
+                              sizeof(*new_structs) * initial_size); \
   if (!new_structs) \
     return -1;  \
   a->allocations[0] = new_structs;  \
@@ -104,7 +116,8 @@ int _##name##_allocator_allocate(struct name##_allocator *a) { \
   assert(a);  \
   type *new_structs;  \
   size_t i; \
-  new_structs = malloc(sizeof(*new_structs) * a->increment); \
+  new_structs = aligned_alloc(LEVEL1_DCACHE_LINESIZE, \
+                              sizeof(*new_structs) * a->increment); \
   if (!new_structs) \
     return -1;  \
   for (i=0; i < a->increment; i++) \
