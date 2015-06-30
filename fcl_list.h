@@ -27,13 +27,18 @@
    A struct with embedded fcl_list_links may have both
    FCL_LIST_DL_XXX and FCL_LIST_FIFO_XXX functions generated such that objects
    in use are doubly linked, while unused objects are placed on a singly linked
-   free list.
+   free list.  See fcl_allocator.h for an allocator of linked objects.
    Multiple links:
    The FCL_LIST_XXX_DEFINE macros may be used multiple times for the same
    struct as long as the name is unique.  A struct with multiple embedded link
    structs can thus be on multiple lists at the same time.
 */
 
+/* Inspirations:
+   utlist: https://troydhanson.github.io/uthash/utlist.html
+   klib: https://github.com/attractivechaos/klib
+   Rusty Russell's blog post On C Linked Lists: http://rusty.ozlabs.org/?p=168
+*/
 #ifndef _FCL_LIST_H_
 #define _FCL_LIST_H_
 
