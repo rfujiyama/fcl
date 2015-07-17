@@ -53,6 +53,7 @@ typedef enum fcl_allocator_oom_policy {
   FCL_ALLOCATOR_OOM_POLICY_INCREMENTAL
 } fcl_allocator_oom_policy;
 
+
 // name = allocator prefix, eg node
 // type = container type, eg struct my_node
 // field_type = the list link(s) type, eg struct fcl_list_links
@@ -61,8 +62,8 @@ typedef enum fcl_allocator_oom_policy {
 // example usage:
 // FCL_ALLOCATOR_LL_DEFINE(node, struct my_node, struct fcl_list_links, links,
 //                         FIFO)
-#define FCL_ALLOCATOR_LL_DEFINE(name, type, field_type, field, recycle_policy) \
-FCL_LIST_##recycle_policy##_DEFINE(name##_free, type, field_type, field) \
+#define FCL_ALLOCATOR_LL_DECLARE(name, type, field_type, field, recycle_policy) \
+FCL_LIST_##recycle_policy##_DECLARE(name##_free, type, field_type, field) \
 struct name##_allocator { \
   struct name##_free_list_head free_list; \
   size_t free_count; \
@@ -72,6 +73,15 @@ struct name##_allocator { \
   size_t num_allocations; \
   fcl_allocator_oom_policy oom_policy;  \
 };  \
+int name##_allocator_init(struct name##_allocator *a, size_t initial_size, \
+                          fcl_allocator_oom_policy oom_policy, size_t inc); \
+void name##_allocator_freeall(struct name##_allocator *a);  \
+int _##name##_allocator_allocate(struct name##_allocator *a); \
+type *name##_allocator_borrow(struct name##_allocator *a);  \
+void name##_allocator_return(struct name##_allocator *a, type *e);
+
+#define FCL_ALLOCATOR_LL_DEFINE(name, type, field_type, field, recycle_policy) \
+FCL_LIST_##recycle_policy##_DEFINE(name##_free, type, field_type, field) \
 int name##_allocator_init(struct name##_allocator *a, size_t initial_size, \
                           fcl_allocator_oom_policy oom_policy, size_t inc) {  \
   assert(a);  \

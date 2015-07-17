@@ -9,7 +9,10 @@ struct my_node {
   struct fcl_list_link links;
 };
 
-// generate the functions for my_node
+// declare the structs and functions for the list of my_node
+FCL_LIST_LIFO_DECLARE(node, struct my_node, struct fcl_list_link, links)
+
+// generate the functions for the list of my_node
 FCL_LIST_LIFO_DEFINE(node, struct my_node, struct fcl_list_link, links)
 
 void print_node(struct my_node *n) {

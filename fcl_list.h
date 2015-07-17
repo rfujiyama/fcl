@@ -68,11 +68,20 @@ struct fcl_list_links {
 // type = container type, eg event
 // field_type = the list link(s) type, eg struct fcl_list_link
 // field = name of the field_type struct in the container, eg link
-#define FCL_LIST_FIFO_DEFINE(name, type, field_type, field) \
+#define FCL_LIST_FIFO_DECLARE(name, type, field_type, field) \
 struct name##_list_head {\
   field_type *first; \
   field_type *last; \
 };  \
+void name##_list_head_init(struct name##_list_head *head);  \
+type *name##_list_get_entry(field_type *e); \
+int name##_list_is_empty(struct name##_list_head *head);  \
+void name##_list_insert(struct name##_list_head *head, type *e);  \
+type *name##_list_get(struct name##_list_head *head); \
+type *name##_list_remove(struct name##_list_head *head);
+
+
+#define FCL_LIST_FIFO_DEFINE(name, type, field_type, field) \
 void name##_list_head_init(struct name##_list_head *head) {\
   assert(head); \
   head->first = NULL; \
@@ -121,10 +130,18 @@ type *name##_list_remove(struct name##_list_head *head) {\
 // type = container type, eg event
 // field_type = the list link(s) type, eg struct fcl_list_link
 // field = name of the field_type struct in the container, eg link
-#define FCL_LIST_LIFO_DEFINE(name, type, field_type, field) \
+#define FCL_LIST_LIFO_DECLARE(name, type, field_type, field) \
 struct name##_list_head {\
   field_type *first; \
 };  \
+void name##_list_head_init(struct name##_list_head *head);  \
+type *name##_list_get_entry(field_type *e); \
+int name##_list_is_empty(struct name##_list_head *head);  \
+void name##_list_insert(struct name##_list_head *head, type *e);  \
+type *name##_list_get(struct name##_list_head *head); \
+type *name##_list_remove(struct name##_list_head *head);
+
+#define FCL_LIST_LIFO_DEFINE(name, type, field_type, field) \
 void name##_list_head_init(struct name##_list_head *head) {\
   assert(head); \
   head->first = NULL; \
@@ -180,6 +197,17 @@ static inline void fcl_list_dl_init(struct fcl_list_links *head) {
 // name = list prefix, eg events
 // type = container type, eg event
 // field = name of the fcl_list_links struct in the container
+#define FCL_LIST_DL_DECLARE(name, type, field) \
+void name##_list_insert_head(struct fcl_list_links *head, type *e); \
+void name##_list_insert_tail(struct fcl_list_links *head, type *e); \
+void name##_list_insert_after(type *current, type *e);  \
+void name##_list_insert_before(type *current, type *e); \
+void name##_list_remove(type *e); \
+type *name##_list_get_entry(struct fcl_list_links *e);  \
+type *name##_list_get_first(struct fcl_list_links *head); \
+type *name##_list_get_last(struct fcl_list_links *head);  \
+int name##_list_is_empty(struct fcl_list_links *head);
+
 #define FCL_LIST_DL_DEFINE(name, type, field) \
 void name##_list_insert_head(struct fcl_list_links *head, type *e) {\
   assert(head); \

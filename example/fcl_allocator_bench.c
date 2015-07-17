@@ -9,6 +9,11 @@ struct my_node {
   struct fcl_list_links links;
 };
 
+// declare the structs and functions for the my_node allocator
+FCL_ALLOCATOR_LL_DECLARE(node, struct my_node, struct fcl_list_links, links,
+                        LIFO)
+
+// generate the functions for the my_node allocator
 FCL_ALLOCATOR_LL_DEFINE(node, struct my_node, struct fcl_list_links, links,
                         LIFO)
 
