@@ -44,11 +44,7 @@
 
 #include <assert.h>   // assert
 #include <stddef.h>   // offsetof
-
-#ifndef CONTAINER_OF
-#define CONTAINER_OF(ptr, type, field) \
-  ((type*)((char*)(ptr) - offsetof(type, field)))
-#endif
+#include "fcl_macro.h"
 
 
 struct fcl_list_link {
@@ -88,7 +84,7 @@ void name##_list_head_init(struct name##_list_head *head) {\
 } \
 type *name##_list_get_entry(field_type *e) {\
   assert(e);  \
-  return CONTAINER_OF(e, type, field);  \
+  return FCL_CONTAINER_OF(e, type, field);  \
 } \
 int name##_list_is_empty(struct name##_list_head *head) {\
   assert(head); \
@@ -148,7 +144,7 @@ void name##_list_head_init(struct name##_list_head *head) {\
 } \
 type *name##_list_get_entry(field_type *e) {\
   assert(e);  \
-  return CONTAINER_OF(e, type, field);  \
+  return FCL_CONTAINER_OF(e, type, field);  \
 } \
 int name##_list_is_empty(struct name##_list_head *head) {\
   assert(head); \
@@ -248,7 +244,7 @@ void name##_list_remove(type *e) {\
 } \
 type *name##_list_get_entry(struct fcl_list_links *e) {\
   assert(e);  \
-  return CONTAINER_OF(e, type, field);  \
+  return FCL_CONTAINER_OF(e, type, field);  \
 } \
 type *name##_list_get_first(struct fcl_list_links *head) {\
   assert(head); \
