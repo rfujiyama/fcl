@@ -21,6 +21,7 @@ FCL_LIST_DL_DEFINE(node, struct my_node, links)
 
 // function declarations
 double delta_seconds(struct timeval *s, struct timeval *e);
+void my_node_init(struct my_node *n);
 
 int main() {
   struct node_allocator node_alloc;
@@ -33,7 +34,8 @@ int main() {
 
 
   gettimeofday(&start, NULL);
-  node_allocator_init(&node_alloc, num_nodes, FCL_ALLOCATOR_OOM_POLICY_DOUBLE, 0);
+  node_allocator_init(&node_alloc, num_nodes, FCL_ALLOCATOR_OOM_POLICY_DOUBLE,
+                      0, my_node_init);
   fcl_list_dl_init(&head);
 
   for (i=0; i < num_nodes; i++)
@@ -70,6 +72,11 @@ int main() {
   printf("malloc/free: %fs\n", delta_seconds(&start, &end));
 
   return 0;
+}
+
+void my_node_init(struct my_node *n) {
+  n->id = -1;
+  n->priority = -1;
 }
 
 double delta_seconds(struct timeval *s, struct timeval *e) {
