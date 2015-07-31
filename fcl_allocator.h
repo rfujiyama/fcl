@@ -69,20 +69,20 @@ typedef enum fcl_allocator_oom_policy {
 //                         FIFO)
 #define FCL_ALLOCATOR_LL_DECLARE(name, type, field_type, field, recycle_policy) \
 FCL_LIST_##recycle_policy##_DECLARE(name##_free, type, field_type, field) \
-typedef void (*fcl_allocator_elem_init_fn)(type *);  \
+typedef void (*name##_allocator_elem_init_fn)(type *);  \
 struct name##_allocator { \
   struct name##_free_list_head free_list; \
   size_t free_count; \
   size_t total_count; \
   size_t increment; \
   type** allocations; \
-  fcl_allocator_elem_init_fn elem_init; \
+  name##_allocator_elem_init_fn elem_init; \
   uint32_t num_allocations; \
   fcl_allocator_oom_policy oom_policy;  \
 };  \
 int name##_allocator_init(struct name##_allocator *a, size_t initial_size, \
                           fcl_allocator_oom_policy oom_policy, size_t inc, \
-                          fcl_allocator_elem_init_fn elem_init); \
+                          name##_allocator_elem_init_fn elem_init); \
 void name##_allocator_freeall(struct name##_allocator *a);  \
 int _##name##_allocator_allocate(struct name##_allocator *a); \
 type *name##_allocator_borrow(struct name##_allocator *a);  \
@@ -92,7 +92,7 @@ void name##_allocator_return(struct name##_allocator *a, type *e);
 FCL_LIST_##recycle_policy##_DEFINE(name##_free, type, field_type, field) \
 int name##_allocator_init(struct name##_allocator *a, size_t initial_size, \
                           fcl_allocator_oom_policy oom_policy, size_t inc, \
-                          fcl_allocator_elem_init_fn elem_init) {  \
+                          name##_allocator_elem_init_fn elem_init) {  \
   assert(a);  \
   type *new_structs;  \
   size_t i; \
